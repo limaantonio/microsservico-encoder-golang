@@ -1,8 +1,8 @@
 package repositories
 
 import (
-	"encoder/domain"
 	"fmt"
+	"fullcycle-video-encoder/domain"
 
 	"github.com/jinzhu/gorm"
 )

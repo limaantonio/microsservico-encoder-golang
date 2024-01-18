@@ -1,7 +1,7 @@
 package domain_test
 
 import (
-	"encoder/domain"
+	"fullcycle-video-encoder/domain"
 	"testing"
 	"time"
 

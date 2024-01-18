@@ -1,14 +1,14 @@
 package repositories
 
 import (
-	"encoder/domain"
 	"fmt"
+	"fullcycle-video-encoder/domain"
 
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
 
-type VideoRepositoryInterface interface {
+type VideoRepository interface {
 	Insert(video *domain.Video) (*domain.Video, error)
 	Find(id string) (*domain.Video, error)
 }
@@ -22,9 +22,9 @@ func NewVideoRepository(db *gorm.DB) *VideoRepositoryDb {
 }
 
 func (repo VideoRepositoryDb) Insert(video *domain.Video) (*domain.Video, error) {
+
 	if video.ID == "" {
 		video.ID = uuid.NewV4().String()
-
 	}
 
 	err := repo.Db.Create(video).Error
@@ -34,6 +34,7 @@ func (repo VideoRepositoryDb) Insert(video *domain.Video) (*domain.Video, error)
 	}
 
 	return video, nil
+
 }
 
 func (repo VideoRepositoryDb) Find(id string) (*domain.Video, error) {
