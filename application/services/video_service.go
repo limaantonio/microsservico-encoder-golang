@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"fullcycle-video-encoder/application/repositories"
-	"fullcycle-video-encoder/domain"
+	"fc-video-encoder/application/repositories"
+	"fc-video-encoder/domain"
 	"io/ioutil"
 	"log"
 	"os"

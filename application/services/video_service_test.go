@@ -1,10 +1,10 @@
 package services_test
 
 import (
-	"fullcycle-video-encoder/application/repositories"
-	"fullcycle-video-encoder/application/services"
-	"fullcycle-video-encoder/domain"
-	"fullcycle-video-encoder/framework/database"
+	"fc-video-encoder/application/repositories"
+	"fc-video-encoder/application/services"
+	"fc-video-encoder/domain"
+	"fc-video-encoder/framework/database"
 	"log"
 	"testing"
 	"time"
@@ -47,6 +47,9 @@ func TestVideoServiceDownload(t *testing.T) {
 	require.Nil(t, err)
 
 	err = videoService.Fragment()
+	require.Nil(t, err)
+
+	err = videoService.Encode()
 	require.Nil(t, err)
 
 }

@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fullcycle-video-encoder/domain"
+	"fc-video-encoder/domain"
 	"log"
 
 	"github.com/jinzhu/gorm"

@@ -1,9 +1,9 @@
 package repositories_test
 
 import (
-	"fullcycle-video-encoder/application/repositories"
-	"fullcycle-video-encoder/domain"
-	"fullcycle-video-encoder/framework/database"
+	"fc-video-encoder/application/repositories"
+	"fc-video-encoder/domain"
+	"fc-video-encoder/framework/database"
 	"testing"
 	"time"
 
