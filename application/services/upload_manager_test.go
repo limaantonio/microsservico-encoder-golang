@@ -1,16 +1,12 @@
 package services_test
 
 import (
-	"fc-video-encoder/application/repositories"
 	"fc-video-encoder/application/services"
-	"fc-video-encoder/domain"
-	"fc-video-encoder/framework/database"
 	"log"
+	"os"
 	"testing"
-	"time"
 
 	"github.com/joho/godotenv"
-	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,21 +17,7 @@ func init() {
 	}
 }
 
-func prepare() (*domain.Video, repositories.VideoRepositoryDb) {
-	db := database.NewDbTest()
-	defer db.Close()
-
-	video := domain.NewVideo()
-	video.ID = uuid.NewV4().String()
-	video.Filepath = "video.mp4"
-	video.CreatedAt = time.Now()
-
-	repo := repositories.VideoRepositoryDb{Db: db}
-
-	return video, repo
-}
-
-func TestVideoServiceDownload(t *testing.T) {
+func TestVideoServiceUpload(t *testing.T) {
 	video, repo := prepare()
 	videoService := services.NewVideoService()
 	videoService.Video = video
@@ -48,6 +30,19 @@ func TestVideoServiceDownload(t *testing.T) {
 	require.Nil(t, err)
 
 	err = videoService.Encode()
+	require.Nil(t, err)
+
+	videoUpload := services.NewVideoUpload()
+	videoUpload.OutputBucket = "encoder-bucket001"
+	videoUpload.VideoPath = os.Getenv("localStoragePath") + "/" + video.ID
+
+	doneUpload := make(chan string)
+	go videoUpload.ProcessUpload(50, doneUpload)
+
+	result := <-doneUpload
+	require.Equal(t, result, "upload completed")
+
+	err = videoService.Finish()
 	require.Nil(t, err)
 
 }
