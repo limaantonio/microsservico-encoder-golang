@@ -82,6 +82,7 @@ func (v *VideoService) Fragment() error {
 	return nil
 }
 
+// para passar nessas funcoes precisei intalar o python2 na raiz da aplicacao no container
 func (v *VideoService) Encode() error {
 	cmdArgs := []string{}
 	cmdArgs = append(cmdArgs, os.Getenv("localStoragePath")+"/"+v.Video.ID+".frag")

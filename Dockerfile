@@ -1,60 +1,60 @@
+# Use a imagem Alpine como base para a instalação do Bento4
+FROM alpine:3.10 as bento4-base
+
+ENV PATH="$PATH:/bin/bash" \
+    BENTO4_BIN="/opt/bento4/bin" \
+    PATH="$PATH:/opt/bento4/bin"
+
+# FFMPEG
+RUN apk add --update ffmpeg bash make
+
+# Instale o Python 2 antes de instalar o Bento4
+RUN apk add --update --upgrade python2 && \
+    wget https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tar.xz && \
+    tar xf Python-2.7.18.tar.xz && \
+    cd Python-2.7.18 && \
+    ./configure && \
+    make && \
+    make install
+
+# Defina a variável de ambiente PYTHON para garantir que o Bento4 o encontre
+ENV PYTHON="/usr/bin/python2"
+
+# Install Bento
+WORKDIR /tmp/bento4
+ENV BENTO4_BASE_URL="http://zebulon.bok.net/Bento4/source/" \
+    BENTO4_VERSION="1-5-0-615" \
+    BENTO4_CHECKSUM="5378dbb374343bc274981d6e2ef93bce0851bda1" \
+    BENTO4_TARGET="" \
+    BENTO4_PATH="/opt/bento4" \
+    BENTO4_TYPE="SRC"
+
+RUN apk add --update --upgrade unzip bash gcc g++ scons && \
+    wget -q ${BENTO4_BASE_URL}/Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip && \
+    sha1sum -b Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip | grep -o "^$BENTO4_CHECKSUM " && \
+    mkdir -p ${BENTO4_PATH} && \
+    unzip Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip -d ${BENTO4_PATH} && \
+    rm -rf Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip
+
+# Compile o Bento4
+RUN cd ${BENTO4_PATH} && scons -u build_config=Release target=x86_64-unknown-linux && \
+    cp -R ${BENTO4_PATH}/Build/Targets/x86_64-unknown-linux/Release ${BENTO4_PATH}/bin && \
+    cp -R ${BENTO4_PATH}/Source/Python/utils ${BENTO4_PATH}/utils && \
+    cp -a ${BENTO4_PATH}/Source/Python/wrappers/. ${BENTO4_PATH}/bin
+
+# Use a imagem Golang como base para a aplicação Go
 FROM golang:1.21.6-alpine3.18 as base
 
-# Instala as dependências necessárias para o build
-RUN apk --update --no-cache add \
-        curl \
-        python3 \
-        bash \
-        gcc \
-        g++ \
-        scons
+# Copie o Bento4 da imagem intermediária
+COPY --from=bento4-base /opt/bento4 /opt/bento4
+ENV PATH="$PATH:/opt/bento4/bin"
 
-# Configura o diretório de trabalho padrão
-WORKDIR /opt/bento4
+# Configure o suporte a CGO
+ENV CGO_ENABLED=1
 
-# Define variáveis de ambiente para o Bento4
-ARG BENTO4_BASE_URL="https://zebulon.bok.net/Bento4/source"
-ARG BENTO4_VERSION="1-5-0-615"
-ARG BENTO4_CHECKSUM="5378dbb374343bc274981d6e2ef93bce0851bda1"
-ARG BENTO4_TARGET=""
-ENV BENTO4_PATH="/opt/bento4"
-ENV BENTO4_TYPE="SRC"
-
-# Fase para download do Bento4
-FROM base as downloader
-
-# Download e verifica o Bento4
-RUN apk --update --no-cache add curl \
-    && curl -k -LO "${BENTO4_BASE_URL}/Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip" \
-    && echo "${BENTO4_CHECKSUM} *Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip" | sha1sum -c - \
-    && unzip "Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip" -d /opt/bento4 \
-    && rm "Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip"
-
-# Fase para a construção final
-FROM base as builder
-
-# Copia os arquivos baixados da fase de downloader
-COPY --from=downloader /opt/bento4 /opt/bento4
-
-# Configurações adicionais após o build
-RUN apk --update --no-cache add \
-        py3-pip
-
-# Instalação do SCons
-RUN pip3 install 'SCons==3.0.5'
-
-# Verifica se o diretório Build existe
-RUN ls -l /opt/bento4/Build
-
-# Configuração do SCons para usar Python 3
-RUN sed -i '1s/python$/python3/' /opt/bento4/Build/Boot.scons
-
-# Limpeza
-RUN rm -rf /var/cache/apk/*
-
-
-# Configura o diretório de trabalho para /go/src
+# Defina o diretório de trabalho da aplicação Go
 WORKDIR /go/src
 
-# Configura o ponto de entrada para tail, segurando o processo rodando
+RUN apk add --no-cache build-base bash
+
 ENTRYPOINT ["tail", "-f", "/dev/null"]

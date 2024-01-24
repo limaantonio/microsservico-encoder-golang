@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	godotenv "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 )
@@ -27,14 +27,12 @@ func prepare() (*domain.Video, repositories.VideoRepositoryDb) {
 
 	video := domain.NewVideo()
 	video.ID = uuid.NewV4().String()
-	video.Filepath = "Motivacional.mp4"
+	video.Filepath = "video.mp4"
 	video.CreatedAt = time.Now()
 
 	repo := repositories.VideoRepositoryDb{Db: db}
-	repo.Insert(video)
 
 	return video, repo
-
 }
 
 func TestVideoServiceDownload(t *testing.T) {
@@ -52,4 +50,6 @@ func TestVideoServiceDownload(t *testing.T) {
 	err = videoService.Encode()
 	require.Nil(t, err)
 
+	err = videoService.Finish()
+	require.Nil(t, err)
 }
